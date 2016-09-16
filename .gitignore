@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 
+# media files
+*.mp3
+
 # C extensions
 *.so
 

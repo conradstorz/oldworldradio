@@ -7,6 +7,7 @@ import json
 import re
 from dateutil.parser import parse
 from datetime import datetime
+import copy
 
 
 def Recover_file(filename):
@@ -81,16 +82,28 @@ def extract_embeded_datestr(string):
    
 def Run():
     file = '/home/conrad/Programming_Code/Python/oldradioworld/2016-09-15 21:43:50.333220.json'
-
+    shows = 0
+    episodes = 0
+    earliest_date = parse('2016-1-1')
+    latest_date = parse('1900-1-1')
     dictionary_of_shows = build_dictionary_from(file)
     sd = dictionary_of_shows 
     for k in sd:
+        shows += 1
         show_name = extract_title(k)
         print('{:4d} MP3s in {} "{}"'.format(len(sd[k]), show_name, k))
         for episode in sd[k]:
+            episodes += 1
             air_date = extract_embeded_datestr(episode)
+            if air_date > latest_date:
+                latest_date = copy.copy(air_date)
+            if air_date < earliest_date:
+                earliest_date = copy.copy(air_date)
             print('{}: {}'.format(show_name, air_date))
-
+    print('{} total shows'.format(shows))
+    print('{} total episodes'.format(episodes))
+    print('Earliest air date: {}'.format(earliest_date))
+    print('Last air date: {}'.format(latest_date))
 
 if __name__ == '__main__':
     Run()

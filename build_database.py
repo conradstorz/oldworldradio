@@ -1,6 +1,5 @@
+""" Take the input file and organize media files by category.
 """
-    Take the input file and organize media files by category.
-    """
 
 from time import sleep
 from datetime import datetime as time
@@ -11,13 +10,22 @@ from datetime import datetime
 
 
 def Recover_file(filename):
+    """ Load the specified file relative to the current working directory.
+    Filename is assumed to be a JSON formatted file.
+    Return the data as a dictionary.
+    """
     with open(filename) as fp:
         json_dict = json.load(fp)
     return json_dict
 
 
-def extract_artist_name(s):
-    splt_str = s.split('/')
+def extract_title(string):
+    """ Assumes that the given string is formatted like a URL.
+    The end of the URL is assumed to have a "." extension.
+    What remains after the extension is then normalized with
+    space characters as word seperators.
+    """
+    splt_str = string.split('/')
     last_item = splt_str[-1]
     chop_ext = last_item.split('.')
     show_name = chop_ext[0]
@@ -27,13 +35,23 @@ def extract_artist_name(s):
 
 
 def build_dictionary_from(filename):
+    """ Filename offered is assumed to be JSON formatted.
+    The file is further assumed to contain one (1) entry
+     for each URL file found while crawling the website.
+    The URL is relative to the website and incomplete.
+    The VALUE stored along with the URL is the website page where the URL was found.
+    Non-MP3 URLs are discarded.
+    MP3 URLs are combined into lists based on what website page they were found on.
+    The new dictionary contains one (1) entry for each refering page and the VALUE
+     is the list of MP3 URLs found at that page.
+    """
     database = {}
     result = Recover_file(filename)
     for k, v in result.items():
         if k.endswith('.mp3'):
             if v in database and k != None:
                 l = database[v]
-                l.append(k)
+                l.append(k)  # NOTE: appending directly to the dictionary would cause errors.
                 database[v] = l
             else:
                 if k != None:
@@ -41,40 +59,11 @@ def build_dictionary_from(filename):
     return database
 
 
-def parse_date(name):
-    #Finds any 6 or 8 digit date with D/M/Y unseparated
-    #or separated by '-' or '/'
-    date = re.search("([\d][-/]?){6}|([\d][-/]?){8}", name)
-    if date:
-        print(date.group(0))
-        date = parse(date.group(0), yearfirst=True)
-        #Dateutil bug sometimes returns 21st century. Force 20th 
-        if date.year > 1999:
-            date = date.replace(year = date.year - 100)
-    else:
-        date = None
-    return date
-
-def parse_dates_in_list(filenames):
-    """
-    Goes through a list of file names and creates a dict
-    containing a datetime and the corresponding filename for
-    every file with a date in the title.
-    """
-    datedict = {}
-    #print(filenames)
-    for name in filenames:
-        for part in name.split():
-            try:
-                date = parse(part, yearfirst=True, fuzzy=False)
-            except ValueError, e:
-                date = None
-            datedict[part] = date       
-
-    return datedict
-
-
 def extract_embeded_datestr(string):
+    """ Takes an input string and scans it for yalid date strings.
+    The first valid string found is returned as a datetime object.
+    If no date is found then a prdictable default date is returned.
+    """
     DEFAULT = parse('1936-07-25', yearfirst=True)
     DADS_BDAY = parse('1936-07-25 12:34:56', yearfirst=True)
     elements = string.split()
@@ -88,20 +77,20 @@ def extract_embeded_datestr(string):
     if date == DEFAULT:
         date = DADS_BDAY
     return date
+
    
-def Main():
+def Run():
     file = '/home/conrad/Programming_Code/Python/oldradioworld/2016-09-15 21:43:50.333220.json'
 
     dictionary_of_shows = build_dictionary_from(file)
     sd = dictionary_of_shows 
     for k in sd:
-        show_name = extract_artist_name(k)
+        show_name = extract_title(k)
         print('{:4d} MP3s in {} "{}"'.format(len(sd[k]), show_name, k))
         for episode in sd[k]:
             air_date = extract_embeded_datestr(episode)
             print('{}: {}'.format(show_name, air_date))
 
 
-
 if __name__ == '__main__':
-    Main()
+    Run()

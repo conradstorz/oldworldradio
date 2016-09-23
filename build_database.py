@@ -26,7 +26,7 @@ def extract_artist_name(s):
     return reconstructed
 
 
-def build_database_from(filename):
+def build_dictionary_from(filename):
     database = {}
     result = Recover_file(filename)
     for k, v in result.items():
@@ -66,26 +66,41 @@ def parse_dates_in_list(filenames):
     for name in filenames:
         for part in name.split():
             try:
-                date = parse(name, yearfirst=True)
+                date = parse(part, yearfirst=True, fuzzy=False)
             except ValueError, e:
                 date = None
-            datedict[name] = date       
+            datedict[part] = date       
 
     return datedict
 
 
-
+def extract_embeded_datestr(string):
+    DEFAULT = parse('1936-07-25', yearfirst=True)
+    DADS_BDAY = parse('1936-07-25 12:34:56', yearfirst=True)
+    elements = string.split()
+    for e in elements:
+        try:
+            date = parse(e, yearfirst=True, fuzzy=False, default=DEFAULT)
+        except ValueError, e:
+                date = DEFAULT        
+        if date != DEFAULT:
+            break
+    if date == DEFAULT:
+        date = DADS_BDAY
+    return date
+   
 def Main():
     file = '/home/conrad/Programming_Code/Python/oldradioworld/2016-09-15 21:43:50.333220.json'
-    database_of_shows = build_database_from(file)
-    sd = database_of_shows  
+
+    dictionary_of_shows = build_dictionary_from(file)
+    sd = dictionary_of_shows 
     for k in sd:
         show_name = extract_artist_name(k)
-        #print('{:4d} MP3s in {} "{}"'.format(len(sd[k]), show_name, k))
-        for item in sd[k]:
-            #print(item.split())
-            #air_date = extract_embeded_datestr(item)
-            print(parse_dates_in_list([item]))
+        print('{:4d} MP3s in {} "{}"'.format(len(sd[k]), show_name, k))
+        for episode in sd[k]:
+            air_date = extract_embeded_datestr(episode)
+            print('{}: {}'.format(show_name, air_date))
+
 
 
 if __name__ == '__main__':

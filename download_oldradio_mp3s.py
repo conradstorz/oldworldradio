@@ -130,7 +130,7 @@ def download_random_episode(db):
             for d in db[m]:
                 for y in db[m][d]:
                     for e in db[m][d][y]:
-                        if not file_exists((db[m][d][y].key(), m, d, y, ''), db):
+                        if not file_exists((db[m][d][y].keys(), m, d, y, ''), db):
                             full_url = 'http://www.oldradioworld.com' + db[m][d][y].key()
                             episode = (db[m][d][y].key(), m, d, y, full_url)
                             break

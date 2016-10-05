@@ -41,12 +41,6 @@ def Store_file(db, filename):
 
 
 def file_exists(ep, db):
-
-    print(db[ep[1]])
-    print(db[ep[1]][ep[2]])
-    print(db[ep[1]][ep[2]][ep[3]])
-    print(db[ep[1]][ep[2]][ep[3]][ep[0]])
-
     downloaded = db[ep[1]][ep[2]][ep[3]][ep[0]]
     if downloaded:
         return True
@@ -136,7 +130,7 @@ def download_random_episode(db):
             for d in db[m]:
                 for y in db[m][d]:
                     for e in db[m][d][y]:
-                        if not file_exists(db[m][d][y][e], db):
+                        if not file_exists((db[m][d][y].key(), m, d, y, ''), db):
                             full_url = 'http://www.oldradioworld.com' + db[m][d][y].key()
                             episode = (db[m][d][y].key(), m, d, y, full_url)
                             break

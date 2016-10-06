@@ -12,6 +12,9 @@ import random
 import wget
 import os
 
+from build_database2 import extract_title
+from build_database2 import extract_embeded_datestr
+
 
 def Recover_file(filename):
     """ Load the specified file relative to the current working directory.
@@ -30,7 +33,7 @@ def stats(db):
         show += 1
         if v:
             downloaded += 1
-    return (show, downloaded)
+    return [show, downloaded]
 
 
 def Store_file(db, filename):
@@ -40,8 +43,10 @@ def Store_file(db, filename):
         json.dump(db, fp)
 
 
-def file_exists(ep, db):
-    downloaded = db[ep[1]][ep[2]][ep[3]][ep[0]]
+def file_exists(filename):
+    """ look for file in directory tree
+    """
+    downloaded = os.path.isfile(filename)
     if downloaded:
         return True
     return False
@@ -84,7 +89,7 @@ def prepare_download_dir(episode):
              month digit,
              day digit,
              year digit,
-             full url of episode)
+             full_url)
     This function needs to check for existance of destination
     directory and create it if necessary.
     """
@@ -106,75 +111,55 @@ def prepare_download_dir(episode):
     return False
 
 
-def download_random_episode(db):
+def download_episodes(shows, shows_db_filename, dates):
     """ Load JSON database of recordings.
-    Pick a random file and if it has not been downloaded, download it.
-    Wait a random amount of time before downloading another file.
-    Use sys module to monitor for CTRL-C and exit cleanly.
+        download all episodes
     """
 
-    # 3 pick a random file and download it
-    def random_show(db):
-        month = random.choice(list(db.keys()))
-        day = random.choice(list(db[month].keys()))
-        year = random.choice(list(db[month][day].keys()))
-        ep = random.choice(list(db[month][day][year].keys()))
+    episodes = list(shows.keys())
+
+    for ep in episodes:
         full_url = 'http://www.oldradioworld.com' + ep
-        return (ep, month, day, year, full_url)
-
-    episode = random_show(db)
-    print(episode)
-
-    # choose a valid file sequentially if need be
-    while file_exists(episode, db):
-        print('Random choice was already downloaded.')
-        for m in list(db.keys()):
-            print(m)
-            for d in list(db[m].keys()):
-                print('    ', d)
-                for y in list(db[m][d].keys()):
-                    print('        ', y)
-                    for e in list(db[m][d][y].keys()):
-                        print('            ', e)
-                        ep = list(db[m][d][y].keys())[0]
-                        print(ep)
-                        full_url = 'http://www.oldradioworld.com' + ep
-                        episode = (ep, m, d, y, full_url)
-                        print(episode)
-                        
-    # are we done with all files?
-    if file_exists(episode, db):
-        return False
-
-    ep = episode
-    full_url = ep[-1]
-
-    print(full_url)
-
-    destination_path = prepare_download_dir(episode)
-    if destination_path:
-        media = wget.download(full_url, destination_path)
-        db[ep[1]][ep[2]][ep[3]][ep[0]] = True
+        print(full_url)
+        showname = extract_title(ep)
+        print(showname)
+        date = extract_embeded_datestr(showname)
+        print(date)
+        epi_tuple = (ep, date.month, date.day, date.year, full_url)
+        print(epi_tuple)
+        destination_path = prepare_download_dir(epi_tuple)
+        print(destination_path)
+        if shows[ep]:  # has episode been downloaded?
+            Print('Downloaded')
+        else:
+            if file_exists(destination_path):
+                shows[ep] = True
+            else:
+                # get the file
+                if destination_path:
+                    media = wget.download(full_url, destination_path)
+                    shows[ep] = True
+                    print('Storing file')
+                    Store_file(shows, shows_db_filename)
+                    print('Next file...')
+                    pause = random.randint(5,30)
+                    print('Pausing for {} seconds.'.format(pause))
+                    sleep(pause)
 
     return True
 
 
 if __name__ == '__main__':
-    database = 'oldradioworld_mp3s.json'
+    show_database = 'oldradioworld_mp3s_shows.json'
+    date_database = 'oldradioworld_mp3s_dates.json'
 
-    print('Recovering database file: {}'.format(database))
-    db = Recover_file(database)
-
+    print('Recovering show database file: {}'.format(show_database))
+    sh_db = Recover_file(show_database)
+    print('Recovering dates database file: {}'.format(date_database))
+    dt_db = Recover_file(date_database)
+    #print('Database stats: {} files, {} downloaded'.format(stats(sh_db)))
     print('Downloading...')
-    while download_random_episode(db):
-        print('Done.')
-
-        print('Storing file')
-        Store_file(db, database)
-        print('Next file...')
-        pause = random.randint(30,120)
-        print('Pausing for {} seconds.'.format(pause))
-        sleep(2)
+    download_episodes(sh_db, show_database, dt_db)
 
     print(time.now())
 

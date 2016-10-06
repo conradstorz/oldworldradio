@@ -130,7 +130,7 @@ def download_episodes(shows, shows_db_filename, dates):
         destination_path = prepare_download_dir(epi_tuple)
         print(destination_path)
         if shows[ep]:  # has episode been downloaded?
-            Print('Downloaded')
+            print('Downloaded')
         else:
             if file_exists(destination_path):
                 shows[ep] = True

@@ -115,7 +115,7 @@ def download_episodes(shows, shows_db_filename, dates):
     """ Load JSON database of recordings.
         download all episodes
     """
-
+    files_downloaded = 0
     episodes = list(shows.keys())
 
     for ep in episodes:
@@ -140,8 +140,9 @@ def download_episodes(shows, shows_db_filename, dates):
                     media = wget.download(full_url, destination_path)
                     shows[ep] = True
                     print('Storing file')
+                    files_downloaded += 1
                     Store_file(shows, shows_db_filename)
-                    print('Next file...')
+                    print('{} files downloaded.'.format(files_downloaded))
                     pause = random.randint(5,30)
                     print('Pausing for {} seconds.'.format(pause))
                     sleep(pause)

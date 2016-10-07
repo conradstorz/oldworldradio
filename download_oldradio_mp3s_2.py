@@ -12,6 +12,9 @@ import random
 import wget
 import os
 
+from colorama import init, Fore, Back, Style
+init(autoreset=True)
+
 from build_database2 import extract_title
 from build_database2 import extract_embeded_datestr
 
@@ -116,36 +119,40 @@ def download_episodes(shows, shows_db_filename, dates):
         download all episodes
     """
     files_downloaded = 0
+    files_prev_downloaded = 0
     episodes = list(shows.keys())
 
     for ep in episodes:
         full_url = 'http://www.oldradioworld.com' + ep
+        print(Style.RESET_ALL)
         print(full_url)
         showname = extract_title(ep)
-        print(showname)
+        print(Back.BLUE + showname)
         date = extract_embeded_datestr(showname)
-        print(date)
+        print(Fore.BLUE + Back.WHITE + str(date))
         epi_tuple = (ep, date.month, date.day, date.year, full_url)
         print(epi_tuple)
         destination_path = prepare_download_dir(epi_tuple)
         print(destination_path)
-        if shows[ep]:  # has episode been downloaded?
-            print('Downloaded')
+        if shows[ep] or file_exists(destination_path):  # has episode been downloaded?
+            files_prev_downloaded += 1
+            shows[ep] = True  # failsafe
+            print(Fore.RED + Back.WHITE + 'Downloaded')
         else:
-            if file_exists(destination_path):
-                shows[ep] = True
-            else:
-                # get the file
-                if destination_path:
+            # get the file
+            if destination_path:
+                try:
                     media = wget.download(full_url, destination_path)
-                    shows[ep] = True
-                    print('Storing file')
-                    files_downloaded += 1
-                    Store_file(shows, shows_db_filename)
-                    print('{} files downloaded.'.format(files_downloaded))
-                    pause = random.randint(5,30)
-                    print('Pausing for {} seconds.'.format(pause))
-                    sleep(pause)
+                except Exception as e:
+                    pass
+                shows[ep] = True
+                print(Back.GREEN + 'Storing file')
+                files_downloaded += 1
+                Store_file(shows, shows_db_filename)
+                print(Back.GREEN + '{} files downloaded this round and {} files previously downloaded.'.format(files_downloaded, files_prev_downloaded))
+                pause = random.randint(5,10)
+                print(Style.DIM + 'Pausing for {} seconds.'.format(pause))
+                sleep(pause)
 
     return True
 

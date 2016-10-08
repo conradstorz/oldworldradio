@@ -124,6 +124,7 @@ def download_episodes(shows, shows_db_filename, dates):
 
     for ep in episodes:
         full_url = 'http://www.oldradioworld.com' + ep
+        print(Back.GREEN + '{} files downloaded this round and {} files previously downloaded.'.format(files_downloaded, files_prev_downloaded))
         print(Style.RESET_ALL)
         print(full_url)
         showname = extract_title(ep)
@@ -149,7 +150,6 @@ def download_episodes(shows, shows_db_filename, dates):
                 print(Back.GREEN + 'Storing file')
                 files_downloaded += 1
                 Store_file(shows, shows_db_filename)
-                print(Back.GREEN + '{} files downloaded this round and {} files previously downloaded.'.format(files_downloaded, files_prev_downloaded))
                 pause = random.randint(5,10)
                 print(Style.DIM + 'Pausing for {} seconds.'.format(pause))
                 sleep(pause)

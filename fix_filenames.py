@@ -156,6 +156,30 @@ def download_episodes(shows, shows_db_filename, dates):
 
     return True
 
+UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+LOWERCASE = UPPERCASE.lower()
+
+def find_camelcase(db):
+    """ Given a database of keys which are strings,
+    scan keys for strings that contain CamelCase.
+    Build new string with spaces instead e.g."Camel Case"
+    place string into a list and return the expanded string
+    along with the original string in a list of tuples [(expanded, original)]
+    """
+    names = []
+    for name in db:
+        showname = extract_title(name)
+        Fixedname = ''
+        for indx, char in enumerate(showname):
+            if indx > 0:
+                if char in UPPERCASE:
+                    if showname[indx - 1] in LOWERCASE:
+                        Fixedname += ' '
+            Fixedname += char
+        if showname != Fixedname:
+            names.append((Fixedname, name))
+    return names
+
 
 if __name__ == '__main__':
     """
@@ -174,10 +198,21 @@ if __name__ == '__main__':
     """
 
     #load database
+    show_database = 'oldradioworld_mp3s_shows.json'
+    date_database = 'oldradioworld_mp3s_dates.json'
+
+    print('Recovering show database file: {}'.format(show_database))
+    sh_db = Recover_file(show_database)
+    print('Recovering dates database file: {}'.format(date_database))
+    dt_db = Recover_file(date_database)
+    stat = stats(sh_db)
+    print('Database stats: {} files, {} downloaded'.format(stat[0], stat[1]))
 
     #scan filenames
+    cc = find_camelcase(sh_db)
+    print('{} filenames found to contain CamelCase'.format(len(cc)))
 
-        #add spaces to CamElcAse
+        #add spaces to CamElcAse (e.g. Cam Elc Ase)
         #change '.' to '_' (except for extension)
         #change '-' to '_'
         #expand known abreviations (use a public dictionary to identify words to identify abreviations)
